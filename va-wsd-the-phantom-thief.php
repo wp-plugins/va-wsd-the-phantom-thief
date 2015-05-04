@@ -8,7 +8,7 @@ Plugin Name: VA WSD the phantom thief
 Plugin URI: http://visualive.jp/
 Description: This is a WordPress plugin that helps create previews of a url based on the OGP of the page, similar to a url preview in a Facebook post.
 Author: KUCKLU
-Version: 1.0.0
+Version: 1.0.1
 Author URI: http://visualive.jp/
 Text Domain: va-wsd-the-phantom-thief
 Domain Path: /langs
@@ -590,20 +590,24 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			exit;
 		}
 
-		if ( 0 !== $my_url ) {
-			$posts = get_posts( url_to_postid( $url ) );
+		if ( 0 < $my_url ) {
+			$post = get_post( $my_url );
 		} else {
-			$posts = self::get_post( $url );
+			$post = self::get_post( $url );
+
+			if ( isset( $post[0] ) && is_object( $post[0] ) ) {
+				$post = $post[0];
+			}
 		}
 
-		if ( !isset( $posts[0] ) || !is_object( $posts[0] ) ) {
+		if ( !isset( $post ) || !is_object( $post ) ) {
 			self::website_insert_post( $url );
 			wp_send_json_error( __( 'Post data has not been set.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
 			exit;
 		} else {
 			$data            = array();
-			$site_url        = get_post_meta( $posts[0]->ID, sprintf( '%s_site_url', self::$plugin_prefix ), true );
-			$site_image_id   = get_post_meta( $posts[0]->ID, sprintf( '%s_site_attachment_id', self::$plugin_prefix ), true );
+			$site_url        = get_post_meta( $post->ID, sprintf( '%s_site_url', self::$plugin_prefix ), true );
+			$site_image_id   = get_post_meta( $post->ID, sprintf( '%s_site_attachment_id', self::$plugin_prefix ), true );
 			$site_image      = "";
 			$site_favicon    = sprintf( 'http://www.google.com/s2/favicons?domain_url=%s', esc_url_raw( $url ) );
 
@@ -613,21 +617,19 @@ class VA_WSD_THE_PHANTOM_THIEF {
 
 			if ( isset( $site_image_id ) && !empty( $site_image_id ) && 0 < intval( $site_image_id ) ) {
 				$site_image = esc_url_raw( wp_get_attachment_image_src( $site_image_id, sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
-			} elseif ( 0 !== $my_url && has_post_thumbnail( $posts[0]->ID ) ) {
-				$site_image = esc_url_raw( wp_get_attachment_image_src( get_post_thumbnail_id( $posts[0]->ID ), sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
+			} elseif ( 0 !== $my_url && has_post_thumbnail( $post->ID ) ) {
+				$site_image = esc_url_raw( wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
 			}
 
-			foreach ( $posts as $post ) {
-				$data = array(
-					'post_title'    => wp_strip_all_tags( $post->post_title ),
-					'post_content'  => wp_strip_all_tags( $post->post_content ),
-					'post_url'      => esc_url_raw( $site_url ),
-					'post_domain'   => parse_url( $site_url )['host'],
-					'post_image'    => $site_image,
-					'post_favicon'  => $site_favicon,
-					'anchor_target' => $target,
-				);
-			}
+			$data = array(
+				'post_title'    => wp_strip_all_tags( $post->post_title ),
+				'post_content'  => wp_strip_all_tags( $post->post_content ),
+				'post_url'      => esc_url_raw( $site_url ),
+				'post_domain'   => parse_url( $site_url )['host'],
+				'post_image'    => $site_image,
+				'post_favicon'  => $site_favicon,
+				'anchor_target' => $target,
+			);
 
 			wp_send_json_success( $data );
 			exit;
@@ -685,7 +687,7 @@ add_action( 'plugins_loaded', array( 'VA_WSD_THE_PHANTOM_THIEF', 'init') );
 /**
  * Uninstall.
  */
-if ( WP_DEBUG === true ) {
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG === true ) {
 	register_deactivation_hook( __FILE__, array( 'VA_WSD_THE_PHANTOM_THIEF', 'uninstall' ) );
 } else {
 	register_uninstall_hook( __FILE__,    array( 'VA_WSD_THE_PHANTOM_THIEF', 'uninstall' ) );

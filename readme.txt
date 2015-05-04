@@ -30,6 +30,8 @@ To install VA WSD the phantom thief:
 2. Embed link with title and summary and thumbnail.
 
 == Changelog ==
+= 1.0.1 =
+* Bug fix.
 
 = 1.0.0 =
 * First public release.
