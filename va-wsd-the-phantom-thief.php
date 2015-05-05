@@ -8,7 +8,7 @@ Plugin Name: VA WSD the phantom thief
 Plugin URI: http://visualive.jp/
 Description: This is a WordPress plugin that helps create previews of a url based on the OGP of the page, similar to a url preview in a Facebook post.
 Author: KUCKLU
-Version: 1.0.3
+Version: 1.1.0
 Author URI: http://visualive.jp/
 Text Domain: va-wsd-the-phantom-thief
 Domain Path: /langs
@@ -94,8 +94,11 @@ class VA_WSD_THE_PHANTOM_THIEF {
 		add_filter( 'wp_insert_post_data',         array( &$this, 'wp_insert_post_data' ) );
 		add_filter( 'the_content',                 array( &$this, 'content_replace' ), 0 );
 		add_filter( 'quicktags_settings',          array( &$this, 'quicktags_settings' ) );
-		add_filter( 'screen_layout_columns',       array( &$this, 'screen_layout_columns' ) );
-		add_filter( 'get_user_option_screen_layout_' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, array( &$this, 'screen_layout' ) );
+		// add_filter( 'screen_layout_columns',       array( &$this, 'screen_layout_columns' ) );
+		// add_filter( 'get_user_option_screen_layout_' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, array( &$this, 'screen_layout' ) );
+
+		add_filter( 'manage_' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE . '_posts_columns',       array( &$this, 'manage_posts_columns' ) );
+		add_filter( 'manage_' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE . '_posts_custom_column', array( &$this, 'manage_posts_custom_column' ), 10, 2 );
 	}
 
 	/**
@@ -126,10 +129,9 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			'show_in_menu'         => $show,
 			'menu_position'        => 80,
 			'menu_icon'            => 'dashicons-welcome-view-site', // https://developer.wordpress.org/resource/dashicons/
-			'supports'             => array( 'title', 'editor' ),
+			'supports'             => array( 'title', 'editor', 'thumbnail' ),
 			'register_meta_box_cb' => array( &$this, 'register_meta_boxes' )
 		) );
-
 
 		$wp_rewrite->add_rewrite_tag( '%' . $rewrite_tag . '%', '([^/]+)', 'post_type=' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE . '&p=' );
 		$wp_rewrite->add_permastruct( VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, '/website/detail/%' . $rewrite_tag . '%', false );
@@ -162,7 +164,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			printf( '<input type="text" value="%d" readonly="true">', esc_attr( $image ) );
 		}, $post->post_type, 'normal', 'high' );
 
-		remove_meta_box( 'submitdiv', VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, 'side' );
+		// remove_meta_box( 'submitdiv', VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, 'side' );
 		remove_meta_box( 'slugdiv', VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, 'normal' );
 	}
 
@@ -398,14 +400,16 @@ class VA_WSD_THE_PHANTOM_THIEF {
 
 		if ( false !== $metas && empty( $post ) ) :
 			$post_id = intval( wp_insert_post( array(
-				'post_title'   => sprintf( '%s', $metas['title'] ),
-				'post_content' => sprintf( '%s', $metas['description'] ),
-				'post_status'  => 'publish',
-				'post_type'    => VA_WSD_THE_PHANTOM_THIEF_POSTTYPE
+				'post_title'     => sprintf( '%s', $metas['title'] ),
+				'post_content'   => sprintf( '%s', $metas['description'] ),
+				'post_status'    => 'publish',
+				'comment_status' => 'closed',
+				'ping_status'    => 'closed',
+				'post_type'      => VA_WSD_THE_PHANTOM_THIEF_POSTTYPE
 			) ) );
 
 			if ( 0 < $post_id )
-				update_post_meta( $post_id, sprintf( '%s_site_url', self::$plugin_prefix ), $url );
+				update_post_meta( $post_id, sprintf( '%s_site_url', self::$plugin_prefix ), sprintf( '%s', esc_url_raw( $url ) ) );
 
 			if ( 0 < $post_id && !empty( $metas['image'] ) && apply_filters( sprintf( '%s_save_image', self::$plugin_prefix ), true ) )
 				self::insert_attachment( $post_id, $metas['image'] );
@@ -445,7 +449,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 
 		$file_name = sprintf( '%s-%d.%s', self::$plugin_prefix, intval( $post_id ), $file_ext );
 
-		if( wp_mkdir_p( $upload_dir['path'] ) )
+		if ( wp_mkdir_p( $upload_dir['path'] ) )
 			$file = $upload_dir['path'] . '/' . $file_name;
 		else
 			$file = $upload_dir['basedir'] . '/' . $file_name;
@@ -464,8 +468,30 @@ class VA_WSD_THE_PHANTOM_THIEF {
 
 		wp_update_attachment_metadata( $attach_id, $attach_data );
 
-//		set_post_thumbnail( $post_id, $attach_id );
+		set_post_thumbnail( $post_id, $attach_id );
 		update_post_meta( $post_id, sprintf( '%s_site_attachment_id', self::$plugin_prefix ), $attach_id );
+	}
+
+	/**
+	 * 管理画面で編集した時、一部のステータスを改変する。
+	 *
+	 * @param  array $data
+	 * @return array
+	 */
+	public function wp_insert_post_data( $data ) {
+		if ( VA_WSD_THE_PHANTOM_THIEF_POSTTYPE === $data['post_type'] ) {
+			$data['post_title']     = wp_strip_all_tags( apply_filters( 'the_title',    $data['post_title'] ) );
+			$data['post_content']   = wp_strip_all_tags( apply_filters( 'post_content', $data['post_content'] ) );
+			$data['post_excerpt']   = "";
+			$data['comment_status'] = 'closed';
+			$data['ping_status']    = 'closed';
+			$data['post_password']  = "";
+
+			if ( 'trash' !== $data['post_status'] )
+				$data['post_status'] = 'publish';
+		}
+
+		return $data;
 	}
 
 	/**
@@ -510,6 +536,63 @@ class VA_WSD_THE_PHANTOM_THIEF {
 		$target = ( 0 === url_to_postid( $matches[0] ) ) ? '': ' target="_blank"';
 
 		return sprintf( '<p class="va-wsd-the-phantom-thief" data-url="%1$s"><a href="%1$s" rel="nofollow"%2$s>%1$s</a></p>', esc_url_raw( $matches[0] ), $target );
+	}
+
+	/**
+	 * Ajax の処理。
+	 *
+	 * @return string json
+	 */
+	public function wp_ajax_vawsdtpt_get() {
+		check_ajax_referer( VA_WSD_THE_PHANTOM_THIEF_NONCE, sprintf( '%s_nonce', self::$plugin_prefix ) );
+
+		$url    = filter_input( INPUT_POST, 'url', FILTER_SANITIZE_STRING );
+		$my_url = url_to_postid( $url );
+		$target = ( 0 === $my_url ) ? true: false;
+
+		if ( !self::validate_url( $url ) ) {
+			wp_send_json_error( __( 'URL has not been set.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
+			exit;
+		}
+
+		if ( 0 < $my_url ) {
+			$post = get_post( $my_url );
+		} else {
+			$post = self::get_post( $url );
+
+			if ( isset( $post[0] ) && is_object( $post[0] ) ) {
+				$post = $post[0];
+			}
+		}
+
+		if ( !isset( $post ) || !is_object( $post ) ) {
+			self::website_insert_post( $url );
+			wp_send_json_error( __( 'Post data has not been set.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
+			exit;
+		} else {
+			$site_url     = get_post_meta( $post->ID, sprintf( '%s_site_url', self::$plugin_prefix ), true );
+			$site_image   = "";
+			$site_favicon = sprintf( 'http://www.google.com/s2/favicons?domain_url=%s', esc_url_raw( $url ) );
+
+			if ( empty( $site_url ) && 0 !== $my_url ) {
+				$site_url = $url;
+			}
+
+			if ( has_post_thumbnail( $post->ID ) ) {
+				$site_image = esc_url_raw( wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
+			}
+
+			wp_send_json_success( array(
+				'post_title'    => wp_strip_all_tags( $post->post_title ),
+				'post_content'  => wp_strip_all_tags( $post->post_content ),
+				'post_url'      => esc_url_raw( $site_url ),
+				'post_domain'   => parse_url( $site_url )['host'],
+				'post_image'    => $site_image,
+				'post_favicon'  => $site_favicon,
+				'anchor_target' => $target,
+			) );
+			exit;
+		}
 	}
 
 	/**
@@ -565,78 +648,59 @@ class VA_WSD_THE_PHANTOM_THIEF {
 	}
 
 	/**
-	 * 管理画面で編集した時、本文から全ての HTML タグを削除する。
+	 * 記事一覧テーブルにカラムを追加する。
 	 *
-	 * @param  array $data
+	 * @param  array $defaults
 	 * @return array
 	 */
-	public function wp_insert_post_data( $data ) {
-		if ( VA_WSD_THE_PHANTOM_THIEF_POSTTYPE === $data['post_type'] )
-			$data['post_content'] = wp_strip_all_tags( $data['post_content'] );
+	public function manage_posts_columns( $defaults ) {
+		$mode = get_user_setting( 'posts_list_mode', 'list' );
 
-		return $data;
+		$new_args['cb']        = $defaults['cb'];
+		$new_args['title']     = $defaults['title'];
+
+		if ( 'excerpt' !== $mode )
+			$new_args['description'] = __( 'Description', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN );
+
+		$new_args['url']       = __( 'URL',       VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN );
+		$new_args['thumbnail'] = __( 'Thumbnail', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN );
+		$new_args['date']      = $defaults['date'];
+
+		return $new_args;
 	}
 
 	/**
-	 * Ajax の処理。
+	 * 記事一覧テーブルのカラムの中身を作成。
 	 *
-	 * @return string json
+	 * @param string  $column
+	 * @param integer $post_id
 	 */
-	public function wp_ajax_vawsdtpt_get() {
-		check_ajax_referer( VA_WSD_THE_PHANTOM_THIEF_NONCE, sprintf( '%s_nonce', self::$plugin_prefix ) );
-
-		$url    = filter_input( INPUT_POST, 'url', FILTER_SANITIZE_STRING );
-		$my_url = url_to_postid( $url );
-		$target = ( 0 === $my_url ) ? true: false;
-
-		if ( !self::validate_url( $url ) ) {
-			wp_send_json_error( __( 'URL has not been set.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
-			exit;
-		}
-
-		if ( 0 < $my_url ) {
-			$post = get_post( $my_url );
-		} else {
-			$post = self::get_post( $url );
-
-			if ( isset( $post[0] ) && is_object( $post[0] ) ) {
-				$post = $post[0];
+	public function manage_posts_custom_column( $column, $post_id ) {
+		if ( $column === 'thumbnail' ) {
+			if ( has_post_thumbnail( $post_id ) ) {
+				$thumb = esc_url_raw( wp_get_attachment_image_src( get_post_thumbnail_id( $post_id ), sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
+				printf( '<img src="%s" width="75">', $thumb );
+			} else {
+				echo 'N/A';
 			}
 		}
 
-		if ( !isset( $post ) || !is_object( $post ) ) {
-			self::website_insert_post( $url );
-			wp_send_json_error( __( 'Post data has not been set.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
-			exit;
-		} else {
-			$data            = array();
-			$site_url        = get_post_meta( $post->ID, sprintf( '%s_site_url', self::$plugin_prefix ), true );
-			$site_image_id   = get_post_meta( $post->ID, sprintf( '%s_site_attachment_id', self::$plugin_prefix ), true );
-			$site_image      = "";
-			$site_favicon    = sprintf( 'http://www.google.com/s2/favicons?domain_url=%s', esc_url_raw( $url ) );
-
-			if ( empty( $site_url ) && 0 !== $my_url ) {
-				$site_url = $url;
+		if ( $column === 'description' ) {
+			$description = get_the_content( $post_id );
+			if ( "" !== $description ) {
+				echo $description;
+			} else {
+				echo 'N/A';
 			}
+		}
 
-			if ( isset( $site_image_id ) && !empty( $site_image_id ) && 0 < intval( $site_image_id ) ) {
-				$site_image = esc_url_raw( wp_get_attachment_image_src( $site_image_id, sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
-			} elseif ( 0 !== $my_url && has_post_thumbnail( $post->ID ) ) {
-				$site_image = esc_url_raw( wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), sprintf( '%s-thumbnail', self::$plugin_prefix ) )[0] );
+		if ( $column === 'url' ) {
+			$url = get_post_meta( $post_id, sprintf( '%s_site_url', self::$plugin_prefix ), true );
+			if ( $url ) {
+				printf( '<a href="%1$s" target="_blank">%1$s</a>', esc_url_raw( $url ) );
+			} else {
+				echo 'N/A';
 			}
-
-			$data = array(
-				'post_title'    => wp_strip_all_tags( $post->post_title ),
-				'post_content'  => wp_strip_all_tags( $post->post_content ),
-				'post_url'      => esc_url_raw( $site_url ),
-				'post_domain'   => parse_url( $site_url )['host'],
-				'post_image'    => $site_image,
-				'post_favicon'  => $site_favicon,
-				'anchor_target' => $target,
-			);
-
-			wp_send_json_success( $data );
-			exit;
 		}
 	}
 

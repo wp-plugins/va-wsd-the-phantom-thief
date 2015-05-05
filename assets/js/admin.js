@@ -11,11 +11,16 @@
 jQuery(function($){
 	"use strict";
 
+	var $iedit = $('.iedit').find('.post-title'),
+		$miscPublishingActions = $('#misc-publishing-actions');
+
 	$('.add-new-h2').remove();
 	$('#bulk-action-selector-top').find('.hide-if-no-js').remove();
 	$('#bulk-action-selector-bottom').find('.hide-if-no-js').remove();
-	$('.iedit').find('.post-title').find('.edit').remove();
-	$('.iedit').find('.post-title').find('.inline').remove();
-	$('.iedit').find('.post-title').find('.clone').remove();
-	$('.iedit').find('.post-title').find('.edit_as_new_draft').remove();
+	$iedit.find('.inline').remove();
+	$iedit.find('.clone').remove();
+	$iedit.find('.edit_as_new_draft').remove();
+	$miscPublishingActions.find('.hide-if-no-js').remove();
+	$miscPublishingActions.find('.hide-if-js').remove();
+	$('#message.updated').find('a').remove();
 });

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: VAWSDTPT 1.0.0\n"
-"POT-Creation-Date: 2015-05-01 18:20+0900\n"
-"PO-Revision-Date: 2015-05-01 18:26+0900\n"
+"Project-Id-Version: VAWSDTPT 1.1.0\n"
+"POT-Creation-Date: 2015-05-05 19:18+0900\n"
+"PO-Revision-Date: 2015-05-05 19:20+0900\n"
 "Last-Translator: VisuAlive - KUCKLU <kuck1u@visualive.jp>\n"
 "Language-Team: VisuAlive - KUCKLU <kuck1u@visualive.jp>\n"
 "Language: en\n"
@@ -16,14 +16,26 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: ..\n"
 
-#: ../va-wsd-the-phantom-thief.php:107 ../va-wsd-the-phantom-thief.php:109
+#: ../va-wsd-the-phantom-thief.php:118 ../va-wsd-the-phantom-thief.php:120
 msgid "Web Site Data"
 msgstr "Web サイトデータ"
 
-#: ../va-wsd-the-phantom-thief.php:562
+#: ../va-wsd-the-phantom-thief.php:554
 msgid "URL has not been set."
 msgstr "URL がセットされていません。"
 
 #: ../va-wsd-the-phantom-thief.php:570
 msgid "Post data has not been set."
 msgstr "ポストデータがセットされていません。"
+
+#: ../va-wsd-the-phantom-thief.php:663
+msgid "Description"
+msgstr "概要"
+
+#: ../va-wsd-the-phantom-thief.php:665
+msgid "URL"
+msgstr ""
+
+#: ../va-wsd-the-phantom-thief.php:666
+msgid "Thumbnail"
+msgstr "サムネイル"
