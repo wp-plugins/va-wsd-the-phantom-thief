@@ -8,7 +8,7 @@ Plugin Name: VA WSD the phantom thief
 Plugin URI: http://visualive.jp/
 Description: This is a WordPress plugin that helps create previews of a url based on the OGP of the page, similar to a url preview in a Facebook post.
 Author: KUCKLU
-Version: 1.0.2
+Version: 1.0.3
 Author URI: http://visualive.jp/
 Text Domain: va-wsd-the-phantom-thief
 Domain Path: /langs
@@ -656,7 +656,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 	public function admin_enqueue_scripts( $hook ) {
 		global $typenow;
 
-		if ( is_admin() && $hook === 'edit.php' &&  VA_WSD_THE_PHANTOM_THIEF_POSTTYPE === $typenow ) {
+		if ( is_admin() && ( $hook === 'edit.php' || $hook === 'post.php' ) &&  VA_WSD_THE_PHANTOM_THIEF_POSTTYPE === $typenow ) {
 			wp_enqueue_style(  'va-wsd-the-phantom-thief-admin', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/css/admin.css' );
 			wp_enqueue_script( 'va-wsd-the-phantom-thief-admin', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/js/admin.js' );
 		}
