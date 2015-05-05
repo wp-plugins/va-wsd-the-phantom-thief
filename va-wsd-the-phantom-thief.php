@@ -8,7 +8,7 @@ Plugin Name: VA WSD the phantom thief
 Plugin URI: http://visualive.jp/
 Description: This is a WordPress plugin that helps create previews of a url based on the OGP of the page, similar to a url preview in a Facebook post.
 Author: KUCKLU
-Version: 1.0.1
+Version: 1.0.2
 Author URI: http://visualive.jp/
 Text Domain: va-wsd-the-phantom-thief
 Domain Path: /langs
@@ -84,8 +84,12 @@ class VA_WSD_THE_PHANTOM_THIEF {
 		add_action( 'load-post.php',               array( &$this, 'user_can_richedit' ) );
 		add_action( 'load-post-new.php',           array( &$this, 'user_can_richedit' ) );
 		add_action( 'wp_enqueue_scripts',          array( &$this, 'wp_enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts',       array( &$this, 'admin_enqueue_scripts') );
 		add_action( 'wp_ajax_vawsdtpt_get',        array( &$this, 'wp_ajax_vawsdtpt_get' ) );
 		add_action( 'wp_ajax_nopriv_vawsdtpt_get', array( &$this, 'wp_ajax_vawsdtpt_get' ) );
+		add_action( 'admin_menu',                  function () {
+			remove_submenu_page( 'edit.php?post_type=' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, 'post-new.php?post_type=' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE );
+		} );
 
 		add_filter( 'wp_insert_post_data',         array( &$this, 'wp_insert_post_data' ) );
 		add_filter( 'the_content',                 array( &$this, 'content_replace' ), 0 );
@@ -127,7 +131,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 		) );
 
 
-		$wp_rewrite->add_rewrite_tag( '%' . $rewrite_tag . '%', '([^/]+)', 'post_type' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE . 'p=' );
+		$wp_rewrite->add_rewrite_tag( '%' . $rewrite_tag . '%', '([^/]+)', 'post_type=' . VA_WSD_THE_PHANTOM_THIEF_POSTTYPE . '&p=' );
 		$wp_rewrite->add_permastruct( VA_WSD_THE_PHANTOM_THIEF_POSTTYPE, '/website/detail/%' . $rewrite_tag . '%', false );
 		add_filter( 'post_type_link', function ( $post_link, $post_id, $leavename ) use ( $rewrite_tag ) {
 			global $wp_rewrite;
@@ -647,6 +651,15 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			'action'   => sprintf( '%s_get', self::$plugin_prefix ),
 			'nonce'    => wp_create_nonce( VA_WSD_THE_PHANTOM_THIEF_NONCE )
 		) );
+	}
+
+	public function admin_enqueue_scripts( $hook ) {
+		global $typenow;
+
+		if ( is_admin() && $hook === 'edit.php' &&  VA_WSD_THE_PHANTOM_THIEF_POSTTYPE === $typenow ) {
+			wp_enqueue_style(  'va-wsd-the-phantom-thief-admin', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/css/admin.css' );
+			wp_enqueue_script( 'va-wsd-the-phantom-thief-admin', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/js/admin.js' );
+		}
 	}
 
 	/**

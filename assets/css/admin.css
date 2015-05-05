@@ -1,0 +1,10 @@
+.add-new-h2,
+#bulk-action-selector-top .hide-if-no-js,
+#bulk-action-selector-bottom .hide-if-no-js,
+.iedit .post-title .edit,
+.iedit .post-title .inline,
+.iedit .post-title .clone,
+.iedit .post-title .edit_as_new_draft {
+	display: none;
+	visibility: hidden;
+}
