@@ -23,4 +23,7 @@ jQuery(function($){
 	$miscPublishingActions.find('.hide-if-no-js').remove();
 	$miscPublishingActions.find('.hide-if-js').remove();
 	$('#message.updated').find('a').remove();
+	$('duplicate-action').remove();
+	$('ed_toolbar').remove();
+	$('wp-content-editor-tools').remove();
 });

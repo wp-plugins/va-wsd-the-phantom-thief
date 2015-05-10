@@ -5,7 +5,10 @@
 .iedit .post-title .clone,
 .iedit .post-title .edit_as_new_draft,
 #misc-publishing-actions .hide-if-no-js,
-#message.updated a {
+#message.updated a,
+#duplicate-action,
+#ed_toolbar,
+#wp-content-editor-tools {
 	display: none;
 	visibility: hidden;
 }
