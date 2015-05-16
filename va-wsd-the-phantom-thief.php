@@ -8,7 +8,7 @@ Plugin Name: VA WSD the phantom thief
 Plugin URI: http://visualive.jp/
 Description: This is a WordPress plugin that helps create previews of a url based on the OGP of the page, similar to a url preview in a Facebook post.
 Author: KUCKLU
-Version: 1.1.1
+Version: 1.1.3
 Author URI: http://visualive.jp/
 Text Domain: va-wsd-the-phantom-thief
 Domain Path: /langs
@@ -480,8 +480,8 @@ class VA_WSD_THE_PHANTOM_THIEF {
 	 */
 	public function wp_insert_post_data( $data ) {
 		if ( VA_WSD_THE_PHANTOM_THIEF_POSTTYPE === $data['post_type'] ) {
-			$data['post_title']     = wp_strip_all_tags( apply_filters( 'the_title',    $data['post_title'] ) );
-			$data['post_content']   = wp_strip_all_tags( apply_filters( 'post_content', $data['post_content'] ) );
+			$data['post_title']     = esc_sql( apply_filters( 'the_title',    $data['post_title'] ) );
+			$data['post_content']   = esc_sql( apply_filters( 'post_content', $data['post_content'] ) );
 			$data['post_excerpt']   = "";
 			$data['comment_status'] = 'closed';
 			$data['ping_status']    = 'closed';
@@ -544,14 +544,25 @@ class VA_WSD_THE_PHANTOM_THIEF {
 	 * @return string json
 	 */
 	public function wp_ajax_vawsdtpt_get() {
-		check_ajax_referer( VA_WSD_THE_PHANTOM_THIEF_NONCE, sprintf( '%s_nonce', self::$plugin_prefix ) );
+//		check_ajax_referer( VA_WSD_THE_PHANTOM_THIEF_NONCE, sprintf( '%s_nonce', self::$plugin_prefix ) );
 
+//		$nonce  = filter_input( INPUT_POST, 'nonce', FILTER_SANITIZE_STRING );
 		$url    = filter_input( INPUT_POST, 'url', FILTER_SANITIZE_STRING );
 		$my_url = url_to_postid( $url );
 		$target = ( 0 === $my_url ) ? true: false;
 
 		if ( !self::validate_url( $url ) ) {
 			wp_send_json_error( __( 'URL has not been set.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
+			exit;
+		}
+
+//		if ( false === wp_verify_nonce( $nonce, sprintf( '%s_nonce', self::$plugin_prefix ) ) ) {
+//			wp_send_json_error( __( 'Nonce error.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
+//			exit;
+//		}
+
+		if ( !( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+			wp_send_json_error( __( 'Is not ajax.', VA_WSD_THE_PHANTOM_THIEF_TEXTDOMAIN ) );
 			exit;
 		}
 
@@ -573,6 +584,8 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			$site_url     = get_post_meta( $post->ID, sprintf( '%s_site_url', self::$plugin_prefix ), true );
 			$site_image   = "";
 			$site_favicon = sprintf( 'http://www.google.com/s2/favicons?domain_url=%s', esc_url_raw( $url ) );
+			$post_title   = apply_filters( 'the_title',   $post->post_title );
+			$post_content = apply_filters( 'the_content', $post->post_content );
 
 			if ( empty( $site_url ) && 0 !== $my_url ) {
 				$site_url = $url;
@@ -583,8 +596,8 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			}
 
 			wp_send_json_success( array(
-				'post_title'    => wp_strip_all_tags( $post->post_title ),
-				'post_content'  => wp_strip_all_tags( $post->post_content ),
+				'post_title'    => wp_trim_words( wp_strip_all_tags( $post_title, true ), 55, '…' ),
+				'post_content'  => wp_trim_words( wp_strip_all_tags( $post_content, true ), 140, '…' ),
 				'post_url'      => esc_url_raw( $site_url ),
 				'post_domain'   => parse_url( $site_url )['host'],
 				'post_image'    => $site_image,

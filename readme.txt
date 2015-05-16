@@ -30,6 +30,14 @@ To install VA WSD the phantom thief:
 2. Embed link with title and summary and thumbnail.
 
 == Changelog ==
+= 1.1.3 =
+* Trims text to a title and description.  
+[Github diff](https://goo.gl/ufe8mF)
+
+= 1.1.2 =
+* Bug fix.  
+[Github diff](https://goo.gl/HXgthv)
+
 = 1.1.1 =
 * Remove the editor toolbar.  
 [Github diff](https://goo.gl/iyS1IM)
