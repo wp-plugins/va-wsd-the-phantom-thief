@@ -16,7 +16,7 @@ jQuery(function($){
 	"use strict";
 
 	$(document).ready(function(){
-		$('#va-wsd-the-phantom-thief').VisuAliveWebSiteDataThePhantomThief();
+		$([id^="va-wsd-the-phantom-thief-"]).VisuAliveWebSiteDataThePhantomThief();
 	});
 });
 

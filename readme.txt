@@ -30,6 +30,10 @@ To install VA WSD the phantom thief:
 2. Embed link with title and summary and thumbnail.
 
 == Changelog ==
+= 1.1.5 =
+* Bug fix.  
+[Github diff](https://goo.gl/YYbvzy)
+
 = 1.1.4 =
 * Performance up the Frontend JavaScript.  
 [Github diff](https://goo.gl/qVV530)  
