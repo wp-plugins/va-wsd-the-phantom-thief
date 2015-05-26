@@ -8,7 +8,7 @@ Plugin Name: VA WSD the phantom thief
 Plugin URI: http://visualive.jp/
 Description: This is a WordPress plugin that helps create previews of a url based on the OGP of the page, similar to a url preview in a Facebook post.
 Author: KUCKLU
-Version: 1.1.6
+Version: 1.1.7
 Author URI: http://visualive.jp/
 Text Domain: va-wsd-the-phantom-thief
 Domain Path: /langs
@@ -523,7 +523,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 		$content           = preg_replace_callback( $content_url_pattern, array( &$this, 'content_replace_cb' ), $content );
 		$content           = preg_replace_callback( "/<\\x00,(\d+),\\x01>/", create_function( '$matches', '$tmp =& $GLOBALS["' . $tmpName . '"];' . 'return $tmp[$matches[1] - 1];' ), $content );
 
-		return '<div id="va-wsd-the-phantom-thief">' . $content . '</div>';
+		return sprintf( '<div id="va-wsd-the-phantom-thief-%d">%s</div>', get_the_ID(), $content );
 	}
 
 	/**
@@ -566,7 +566,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 			exit;
 		}
 
-		if ( 0 < $my_url ) {
+		if ( false === $target ) {
 			$post = get_post( $my_url );
 		} else {
 			$post = self::get_post( $url );
@@ -722,7 +722,7 @@ class VA_WSD_THE_PHANTOM_THIEF {
 	 */
 	public function wp_enqueue_scripts() {
 		wp_enqueue_style(   'va-wsd-the-phantom-thief-style', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/css/style.css' );
-		wp_enqueue_script(  'va-wsd-the-phantom-thief-ajax', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/js/ajax.js', array( 'jquery' ) );
+		wp_enqueue_script(  'va-wsd-the-phantom-thief-ajax', VA_WSD_THE_PHANTOM_THIEF_PLUGIN_URL . 'assets/js/ajax.min.js', array( 'jquery' ) );
 		wp_localize_script( 'va-wsd-the-phantom-thief-ajax', 'VAWSDTPT', array(
 			'endpoint' => admin_url( 'admin-ajax.php' ),
 			'action'   => sprintf( '%s_get', self::$plugin_prefix ),

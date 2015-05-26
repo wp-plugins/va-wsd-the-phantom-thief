@@ -43,7 +43,7 @@ jQuery(function($){
 				urlRegExp = this.urlRegExp,
 				ajaxGet   = this.ajaxGet;
 
-			$target.each(function(){
+			$.each($target, function(){
 				var $this      = $(this),
 					$targetURL = $this.data("url"),
 					html       = [];
